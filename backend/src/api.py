@@ -100,6 +100,7 @@ def create_drinks(token):
     try:
         drink = Drink(title=new_title, recipe=new_recipe)
         drink.insert()
+        drink = [drink.long()]
 
         return jsonify({
             'success': True,
@@ -120,6 +121,29 @@ def create_drinks(token):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def update_drink(drink_id):
+    try:
+        if drink_id is None:
+            abort(404)
+        
+        drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+        if drink is None:
+            abort(404)
+        else:
+            drink.update()
+
+        drink = [drink.long()]
+
+        return jsonify({
+            'success': True,
+            'drinks': drink,
+        })
+    except:
+        abort(422)
 
 
 '''
