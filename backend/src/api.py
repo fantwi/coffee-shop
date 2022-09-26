@@ -30,17 +30,30 @@ CORS(app)
 '''
 
 @app.route('/drinks')
-@requires_auth('get:drinks')
-def get_drinks(token):
+def get_drinks():
     drink_data = Drink.query.order_by(Drink.id).all()
-    try:
-        drinks = [drink.short() for drink in drink_data]
-    except:
+    drinks = [drink.short() for drink in drink_data]
+
+    if len(drinks) == 0:
         abort(404)
+    
     return jsonify({
         'success': True,
         'drinks': drinks,
     })
+
+# @app.route('/drinks')
+# @requires_auth('get:drinks')
+# def get_drinks(token):
+#     drink_data = Drink.query.order_by(Drink.id).all()
+#     try:
+#         drinks = [drink.short() for drink in drink_data]
+#     except:
+#         abort(404)
+#     return jsonify({
+#         'success': True,
+#         'drinks': drinks,
+#     })
 
 
 '''
@@ -52,6 +65,20 @@ def get_drinks(token):
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
+def get_drinks_detail(token):
+    drink_data = Drink.query.order_by(Drink.id).all()
+    drinks = [drink.long() for drink in drink_data]
+
+    if len(drinks) == 0:
+        abort(404)
+    
+    return jsonify({
+        'success': True,
+        'drinks': drinks,
+    })
+
 
 '''
 @TODO implement endpoint
@@ -62,6 +89,24 @@ def get_drinks(token):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def create_drinks(token):
+    body = request.get_json()
+    new_title = body.get('title', None)
+    new_recipe = body.get('recipe', None)
+
+    try:
+        drink = Drink(title=new_title, recipe=new_recipe)
+        drink.insert()
+    except:
+        abort(422)
+
+    return jsonify({
+        'success': True,
+        'drinks': drink,
+    })
 
 
 '''
