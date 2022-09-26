@@ -128,12 +128,17 @@ def update_drink(drink_id):
     try:
         if drink_id is None:
             abort(404)
+
+        body = request.get_json()
+        new_title = body.get('title', None)
+        new_recipe = body.get('recipe', None)
         
         drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
 
         if drink is None:
             abort(404)
-        else:
+
+        if new_title is not None | new_recipe is not None:
             drink.update()
 
         drink = [drink.long()]
