@@ -100,13 +100,13 @@ def create_drinks(token):
     try:
         drink = Drink(title=new_title, recipe=new_recipe)
         drink.insert()
+
+        return jsonify({
+            'success': True,
+            'drinks': drink,
+        })
     except:
         abort(422)
-
-    return jsonify({
-        'success': True,
-        'drinks': drink,
-    })
 
 
 '''
