@@ -29,6 +29,19 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks')
+@requires_auth('get:drinks')
+def get_drinks(token):
+    drink_data = Drink.query.order_by(Drink.id).all()
+    try:
+        drinks = [drink.short() for drink in drink_data]
+    except:
+        abort(404)
+    return jsonify({
+        'success': True,
+        'drinks': drinks,
+    })
+
 
 '''
 @TODO implement endpoint
