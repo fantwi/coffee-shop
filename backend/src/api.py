@@ -138,7 +138,12 @@ def update_drink(drink_id):
         if drink is None:
             abort(404)
 
-        if new_title is not None | new_recipe is not None:
+        if new_title is not None:
+            drink.title = new_title
+            drink.update()
+            
+        if new_recipe is not None:
+            drink.recipe  = new_recipe
             drink.update()
 
         drink = [drink.long()]
@@ -210,13 +215,52 @@ def unprocessable(error):
 
 '''
 
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'success': False,
+        'error': 400,
+        'message': 'bad request'
+    }), 400
+
+@app.errorhandler(405)
+def method_not_found(error):
+    return jsonify({
+        'success': False,
+        'error': 405,
+        'message': 'method not found'
+    }), 405
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return jsonify({
+        'success': False,
+        'error': 500,
+        'message': 'internal server error'
+    }), 500
+
 '''
 @TODO implement error handler for 404
     error handler should conform to general task above
 '''
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'success': False,
+        'error': 404,
+        'message': 'resource not found'
+    }), 404
 
 
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return jsonify({
+        'success': False,
+        'error': AuthError,
+        'message': 'authentication failed'
+    })
