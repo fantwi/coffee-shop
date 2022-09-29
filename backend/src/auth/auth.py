@@ -37,16 +37,58 @@ class AuthError(Exception):
 def get_token_auth_header():
     # check if authorization is not in request
     if 'Authorization' not in request.headers:
-        abort(401)
+        raise AuthError({
+            'code': 'authorization_header_missing',
+            'description': 'Authorization header is expected'
+        }, 401)
+        # abort(401)
     # get the token   
     auth_header = request.headers['Authorization']
     header_parts = auth_header.split(' ')
     # check if token is valid
     if len(header_parts) != 2:
-        abort(401)
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Header is malformed'
+        }, 401)
+        # abort(401)
     elif header_parts[0].lower() != 'bearer':
-         abort(401) 
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Authorization header must start with "Bearer"'
+        }, 401)
+        #  abort(401) 
     return header_parts[1]
+
+    # auth = request.headers.get('Authorization', None)
+
+    # if not auth:
+    #     raise AuthError({
+    #         'code': 'authorization_header_missing',
+    #         'description': 'Authorization header is expected.'
+    #     }, 401)
+
+    # parts = auth.split()
+    # if parts[0].lower() != 'bearer':
+    #     raise AuthError({
+    #         'code': 'invalid_header',
+    #         'description': 'Authorization header must start with "Bearer".'
+    #     }, 401)
+
+    # elif len(parts) == 1:
+    #     raise AuthError({
+    #         'code': 'invalid_header',
+    #         'description': 'Token not found.'
+    #     }, 401)
+
+    # elif len(parts) > 2:
+    #     raise AuthError({
+    #         'code': 'invalid_header',
+    #         'description': 'Authorization header must be bearer token.'
+    #     }, 401)
+
+    # token = parts[1]
+    # return 
 
 '''
 @DONE implement check_permissions(permission, payload) method
@@ -61,10 +103,10 @@ def get_token_auth_header():
 '''
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
-                        raise AuthError({
-                            'code': 'invalid_claims',
-                            'description': 'Permissions not included in JWT.'
-                        }, 400)
+        raise AuthError({
+            'code': 'invalid_claims',
+            'description': 'Permissions not included in JWT.'
+        }, 400)
 
     if permission not in payload['permissions']:
         raise AuthError({
@@ -144,9 +186,9 @@ def verify_decode_jwt(token):
                 'description': 'Unable to parse authentication token.'
             }, 400)
     raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Unable to find the appropriate key.'
-            }, 400)
+        'code': 'invalid_header',
+        'description': 'Unable to find the appropriate key.'
+    }, 400)
 
 '''
 @TODO implement @requires_auth(permission) decorator method
@@ -179,7 +221,10 @@ def requires_auth(permission=''):
             try:
                 payload = verify_decode_jwt(token)
             except:
-                abort(401)
+                raise AuthError({
+                    'code': 'invalid_token',
+                    'description': 'access denied due to invalid token'
+                }, 401)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 

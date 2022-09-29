@@ -11,6 +11,16 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+# @app.after_request
+# def after_request(response):
+#     response.headers.add(
+#         "Access-Control-Allow-Headers", "Content-Type, Authorization, true"
+#     )
+#     response.headers.add(
+#         "Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS"
+#     )
+#     return response
+
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
@@ -40,7 +50,7 @@ def get_drinks():
     return jsonify({
         'success': True,
         'drinks': drinks,
-    })
+    }), 200
 
 # @app.route('/drinks')
 # @requires_auth('get:drinks')
@@ -67,7 +77,7 @@ def get_drinks():
 
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def get_drinks_detail(token):
+def get_drinks_detail(jwt):
     drink_data = Drink.query.order_by(Drink.id).all()
     drinks = [drink.long() for drink in drink_data]
 
@@ -77,7 +87,7 @@ def get_drinks_detail(token):
     return jsonify({
         'success': True,
         'drinks': drinks,
-    })
+    }), 200
 
 
 '''
@@ -92,10 +102,18 @@ def get_drinks_detail(token):
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def create_drinks(token):
+def create_drinks(jwt):
     body = request.get_json()
     new_title = body.get('title', None)
-    new_recipe = body.get('recipe', None)
+    new_recipe = json.dumps(body.get('recipe', None))
+
+    # for item in new_recipe:
+    #     color = item.get('color', None)
+    #     parts = item.get('parts', None)
+    #     name = item.get('name', None)
+
+    # if color is None or name is None or parts is None:
+    #     abort(400)
 
     try:
         drink = Drink(title=new_title, recipe=new_recipe)
@@ -105,9 +123,21 @@ def create_drinks(token):
         return jsonify({
             'success': True,
             'drinks': drink,
-        })
+        }), 200
     except:
         abort(422)
+
+    # try:
+    #     drink = Drink(title=new_title, recipe=json.dumps(new_recipe))
+    #     drink.insert()
+    #     drink = [drink.long()]
+
+    #     return jsonify({
+    #         'success': True,
+    #         'drinks': drink,
+    #     })
+    # except:
+    #     abort(422)
 
 
 '''
@@ -124,14 +154,14 @@ def create_drinks(token):
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def update_drink(drink_id):
+def update_drink(jwt, drink_id):
     try:
         if drink_id is None:
             abort(404)
 
         body = request.get_json()
         new_title = body.get('title', None)
-        new_recipe = body.get('recipe', None)
+        new_recipe = json.dumps(body.get('recipe', None))
         
         drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
 
@@ -169,7 +199,7 @@ def update_drink(drink_id):
 
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(drink_id):
+def delete_drink(jwt, drink_id):
     try:
         if drink_id is None:
             abort(404)
@@ -261,6 +291,6 @@ def not_found(error):
 def auth_error(error):
     return jsonify({
         'success': False,
-        'error': AuthError,
-        'message': 'authentication failed'
-    })
+        'error': error.status_code,
+        'message': error.error
+    }), error.status_code
