@@ -11,23 +11,13 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
-# @app.after_request
-# def after_request(response):
-#     response.headers.add(
-#         "Access-Control-Allow-Headers", "Content-Type, Authorization, true"
-#     )
-#     response.headers.add(
-#         "Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS"
-#     )
-#     return response
-
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-db_drop_and_create_all()
+# db_drop_and_create_all()
 
 # ROUTES
 '''
@@ -40,39 +30,11 @@ db_drop_and_create_all()
 '''
 
 
-# @app.route('/drinks')
-# def get_drinks():
-#     drink_data = Drink.query.order_by(Drink.id).all()
-#     drinks = [drink.short() for drink in drink_data]
-
-#     if len(drinks) == 0:
-#         abort(404)
-
-#     return jsonify({
-#         'success': True,
-#         'drinks': drinks,
-#     }), 200
-
-# @app.route('/drinks')
-# @requires_auth('get:drinks')
-# def get_drinks(token):
-#     drink_data = Drink.query.order_by(Drink.id).all()
-#     try:
-#         drinks = [drink.short() for drink in drink_data]
-#     except:
-#         abort(404)
-#     return jsonify({
-#         'success': True,
-#         'drinks': drinks,
-#     })
-
 @app.route('/drinks')
 def get_drinks():
     drink_data = Drink.query.order_by(Drink.id).all()
-    try:
-        drinks = [drink.short() for drink in drink_data]
-    except:
-        abort(404)
+    drinks = [drink.short() for drink in drink_data]
+
     return jsonify({
         'success': True,
         'drinks': drinks,
@@ -95,13 +57,10 @@ def get_drinks_detail(jwt):
     drink_data = Drink.query.order_by(Drink.id).all()
     drinks = [drink.long() for drink in drink_data]
 
-    if len(drinks) == 0:
-        abort(404)
-
     return jsonify({
         'success': True,
         'drinks': drinks,
-    }), 200
+    })
 
 
 '''
@@ -138,7 +97,7 @@ def create_drinks(jwt):
         return jsonify({
             'success': True,
             'drinks': drink,
-        }), 200
+        })
     except:
         abort(422)
 
@@ -186,18 +145,17 @@ def update_drink(jwt, drink_id):
 
         if new_title is not None:
             drink.title = new_title
-            drink.update()
 
         if new_recipe is not None:
             drink.recipe = new_recipe
-            drink.update()
 
+        drink.update()
         drink = [drink.long()]
 
         return jsonify({
             'success': True,
             'drinks': drink,
-        }), 200
+        })
     except:
         abort(422)
 
@@ -231,7 +189,7 @@ def delete_drink(jwt, drink_id):
         return jsonify({
             'success': True,
             'delete': drink_id,
-        }), 200
+        })
     except:
         abort(422)
 
